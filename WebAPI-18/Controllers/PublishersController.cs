@@ -60,7 +60,7 @@ namespace WebAPI_18.Controllers
         }
 
         [HttpPost("add-publisher")]
-        public IActionResult AddPublisher(PublisherVM  publisher)
+        public IActionResult AddPublisher([FromBody]PublisherVM  publisher)
         {
             var newPublisher = _publisherService.AddPublisher(publisher);
             return Created(nameof(AddPublisher), newPublisher);
@@ -74,6 +74,19 @@ namespace WebAPI_18.Controllers
                 _publisherService.DeletePublisherById(id);
                 return Ok();
             }catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPut("update-publisher-by-id/{id}")]
+        public IActionResult UpdatePublisherById(int id, PublisherVM publisher)
+        {
+            try
+            {
+                _publisherService.UpdatePublisher(id, publisher);
+                return Ok();
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }

@@ -9,17 +9,59 @@ namespace WebAPI_18.Data.Services
 {
     public class BookService
     {
+        const int skipPages = 6;
         private readonly AppDbContext _context;
         public BookService(AppDbContext context)
         {
             _context = context;
         }
 
-        public List<Book> GetAllBooks() => _context.Books.ToList();
+        public BookPage GetAllBooks(string sortBy, string searchString, int? page)
+        {
+            var allBooks = _context.Books.OrderBy(n => n.Title).ToList();
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                allBooks = allBooks.OrderByDescending(n => n.Title).ToList();
+            }
+            if (page == null || page < 1)
+            {
+                page = 1;
+            }
+            BookPage bookPage = new BookPage()
+            {
+                Count = allBooks.Count,
+                Prev = (int)page - 1 < 1 ? null : (int)page - 1,
+                Next = (int)page + 1 > allBooks.Count / skipPages ? null : (int)page + 1
+            };
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                allBooks = allBooks.Where(n => n.Title.Contains(searchString)).ToList();
+            }
+            allBooks = allBooks.Skip(skipPages * ((int)page - 1)).Take(skipPages).ToList();
+
+            bookPage.Books = new List<BookVM>();
+            foreach (var item in allBooks)
+            {
+                bookPage.Books.Add(new BookVM()
+                {
+                    Rate = item.Rate,
+                    IsRead = item.IsRead,
+                    ImageURL = item.ImageURL,
+                    Genre = item.Genre,
+                    Description = item.Description,
+                    DateRead = item.DateRead,
+                    DateAdded = item.DateAdded,
+                    Title = item.Title,
+                    PublisherId = item.PublisherId
+                });
+            }
+
+            return bookPage;
+        }
 
         public void AddBookWithAuthors(BookVM book)
         {
-
             var _book = new Book()
             {
                 Title = book.Title,
@@ -36,15 +78,18 @@ namespace WebAPI_18.Data.Services
             _context.Books.Add(_book);
             _context.SaveChanges();
 
-            foreach (var id in book.AuthorIds)
+            if (book.AuthorIds != null)
             {
-                var _book_author = new Book_Author()
+                foreach (var id in book.AuthorIds)
                 {
-                    BookId = _book.Id,
-                    AuthorId = id
-                };
-                _context.Book_Authors.Add(_book_author);
-                _context.SaveChanges();
+                    var _book_author = new Book_Author()
+                    {
+                        BookId = _book.Id,
+                        AuthorId = id
+                    };
+                    _context.Book_Authors.Add(_book_author);
+                    _context.SaveChanges();
+                }
             }
         }
 
@@ -76,6 +121,28 @@ namespace WebAPI_18.Data.Services
             {
                 _context.Books.Remove(_book);
                 _context.SaveChanges();
+            }
+        }
+
+        public void UpdateBook(int id, BookVM book)
+        {
+            var _book = _context.Books.FirstOrDefault(n => n.Id == id);
+            if (_book != null)
+            {
+                _book.Title = book.Title;
+                _book.Rate = book.Rate;
+                _book.IsRead = book.IsRead;
+                _book.ImageURL = book.ImageURL;
+                _book.Genre = book.Genre;
+                _book.Description = book.Description;
+                _book.DateRead = book.DateRead;
+                _book.DateAdded = book.DateAdded;
+
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new Exception($"Book with id: {id} not found.");
             }
         }
     }

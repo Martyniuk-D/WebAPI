@@ -9,4 +9,11 @@ namespace WebAPI_18.Data.ViewModels
     {
         public string FullName { get; set; }
     }
+    public class AuthorPage
+    {
+        public int Count { get; set; }
+        public int? Prev { get; set; }
+        public int? Next { get; set; }
+        public List<AuthorVM> Authors { get; set; }
+    }
 }

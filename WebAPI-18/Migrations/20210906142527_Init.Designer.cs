@@ -10,8 +10,8 @@ using WebAPI_18.Data;
 namespace WebAPI_18.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20210827154824_Add table for serilog")]
-    partial class Addtableforserilog
+    [Migration("20210906142527_Init")]
+    partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

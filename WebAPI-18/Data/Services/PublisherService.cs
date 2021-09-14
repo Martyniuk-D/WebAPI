@@ -9,22 +9,44 @@ namespace WebAPI_18.Data.Services
 {
     public class PublisherService
     {
+        const int skipPages = 6;
         private readonly AppDbContext _context;
         public PublisherService(AppDbContext context)
         {
             _context = context;
         }
 
-        public List<Publisher> GetAllPublishers(string sortBy, string searchString, int? page)
+        public PublisherPage GetAllPublishers(string sortBy, string searchString, int? page)
         {
             var allPublishers = _context.Publishers.OrderBy(n => n.Name).ToList();
             if (!string.IsNullOrEmpty(sortBy))
             {
-                
+                allPublishers = allPublishers.OrderByDescending(n => n.Name).ToList();
+            }
+            if (page == null || page < 1)
+            {
+                page = 1;
+            }
+            PublisherPage publisherPage = new PublisherPage()
+            {
+                Count = allPublishers.Count,
+                Prev = (int)page - 1 < 1 ? null : (int)page - 1,
+                Next = (int)page + 1 > allPublishers.Count / skipPages ? null : (int)page + 1
+            };
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                allPublishers = allPublishers.Where(n => n.Name.Contains(searchString)).ToList();
+            }
+            allPublishers = allPublishers.Skip(skipPages * ((int)page - 1)).Take(skipPages).ToList();
+
+            publisherPage.Publishers = new List<PublisherVM>();
+            foreach (var item in allPublishers)
+            {
+                publisherPage.Publishers.Add(new PublisherVM() { Name = item.Name });
             }
 
-          
-            return allPublishers;
+            return publisherPage;
         }
 
         public Publisher GetPublisherById(int id) => _context.Publishers.FirstOrDefault(n => n.Id == id);
@@ -57,9 +79,22 @@ namespace WebAPI_18.Data.Services
         public void DeletePublisherById(int id)
         {
             var _publisher = _context.Publishers.FirstOrDefault(n => n.Id == id);
-            if(_publisher != null)
+            if (_publisher != null)
             {
                 _context.Publishers.Remove(_publisher);
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new Exception($"Publisher with id: {id} not found.");
+            }
+        }
+        public void UpdatePublisher(int id, PublisherVM publisher)
+        {
+            var _publisher = _context.Publishers.FirstOrDefault(n => n.Id == id);
+            if (_publisher != null)
+            {
+                _publisher.Name = publisher.Name;
                 _context.SaveChanges();
             }
             else

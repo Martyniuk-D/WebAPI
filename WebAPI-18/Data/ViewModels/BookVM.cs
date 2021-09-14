@@ -36,4 +36,12 @@ namespace WebAPI_18.Data.ViewModels
         public string PublisherName { get; set; }
         public List<string> AuthorNames { get; set; }
     }
+
+    public class BookPage
+    {
+        public int Count { get; set; }
+        public int? Prev { get; set; }
+        public int? Next { get; set; }
+        public List<BookVM> Books { get; set; }
+    }
 }

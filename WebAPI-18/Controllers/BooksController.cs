@@ -21,9 +21,9 @@ namespace WebAPI_18.Controllers
         }
 
         [HttpGet("get-books")]
-        public IActionResult GetAllBooks()
+        public IActionResult GetAllBooks(string sortBy, string searchString, int page)
         {
-            var allBooks = _bookService.GetAllBooks();
+            var allBooks = _bookService.GetAllBooks(sortBy, searchString, page);
             return Ok(allBooks);
         }
 
@@ -48,12 +48,19 @@ namespace WebAPI_18.Controllers
             }
         }
 
-        //[HttpPut("update-book/{id}")]
-        //public IActionResult UpdateBook(int id, [FromBody] Book book)
-        //{
-        //    var updatedBook = _bookService.UpdateBook(id, book);
-        //    return Ok(updatedBook);
-        //}
+        [HttpPut("update-book/{id}")]
+        public IActionResult UpdateBookById(int id, BookVM book)
+        {
+            try
+            {
+                _bookService.UpdateBook(id, book);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
         [HttpDelete("delete-book/{id}")]
         public IActionResult DeleteBook(int id)
